@@ -45,9 +45,10 @@
     .chat-box {
       border: 1px solid #0f0;
       padding: 10px;
-      height: 500px;
+      height: 640px;
       overflow-y: auto;
-      background-color: rgba(0, 255, 0, 0.03);
+      background-color: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(6px);
       margin-bottom: 10px;
     }
     .chat-controls {
@@ -77,9 +78,9 @@
       animation: glow-message 5s ease-in-out;
     }
     @keyframes glow-message {
-      0% { opacity: 1; text-shadow: 0 0 5px crimson; }
-      50% { opacity: 0.8; text-shadow: 0 0 10px #00ffff; }
-      100% { opacity: 1; text-shadow: 0 0 5px crimson; }
+      0% { opacity: 1; text-shadow: 0 0 10px #0044ff; }
+      50% { opacity: 0.8; text-shadow: 0 0 18px #0044ff; }
+      100% { opacity: 1; text-shadow: 0 0 10px #0044ff; }
     }
   </style>
 </head>
