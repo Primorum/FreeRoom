@@ -49,6 +49,11 @@
       50% { opacity: 0.7; text-shadow: 0 0 20px #0f0; }
       100% { opacity: 1; text-shadow: 0 0 5px #0f0; }
     }
+    @keyframes glow-message {
+      0% { opacity: 1; text-shadow: 0 0 5px crimson; }
+      50% { opacity: 0.8; text-shadow: 0 0 10px #00ffff; }
+      100% { opacity: 1; text-shadow: 0 0 5px crimson; }
+    }
     .chat-box {
       border: 1px solid #0f0;
       padding: 10px;
@@ -77,12 +82,24 @@
     .chat-controls {
       margin-top: 10px;
     }
+    .message-entry {
+      animation: glow-message 5s ease-in-out;
+    }
+    .theme-toggle {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      color: #fff;
+      font-size: 0.9rem;
+      cursor: pointer;
+      text-shadow: 0 0 5px crimson;
+    }
   </style>
 </head>
 <body>
   <div class="top-brand">
     <a class="brand-link" href="https://primorum.github.io/" target="_blank">
-      <span id="brandPulse">Quantum Origins</span>
+      Quantum Origins
     </a>
   </div>
 
@@ -105,6 +122,7 @@
   </div>
 
   <button class="purge-button" onclick="purgeMessages()">⚠ Purge All Messages (Manual)</button>
+  <div class="theme-toggle" onclick="toggleTheme()">Toggle Theme</div>
 
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js"></script>
@@ -125,8 +143,14 @@
     const msgRef = db.ref("messages");
     const presenceRef = db.ref("presence");
 
-    const glyphs = ["⟐", "◬", "𐌎", "𐊗", "§", "⚶", "⇅", "∆", "☌", "🜁", "❖", "☍"];
-    const glyphName = glyphs[Math.floor(Math.random() * glyphs.length)];
+    const codexNames = [
+      "QuantumSeer", "EntropyMonk", "DreamArchivist", "ChronoWeaver", "Συνείδησις", "Σκέψις", "Νόησις", "CipheredOne",
+      "SpectralThinker", "PrimordialMind", "AnimaEgo", "Theophoric", "Ψυχή", "Δαίμων", "Pathfinder", "DriftBearer",
+      "Στιγμή", "GlitchNode", "The Witness", "VoidMason", "CosmicScribe", "Φωνή", "AstralShaper", "Emanant", "Δέκτης",
+      "PulseScript", "CausalEcho", "MythosCode", "CovenFlare", "SignalThorn", "Νόμος", "NeuralPath", "ThreadKeeper"
+    ];
+
+    const glyphName = codexNames[Math.floor(Math.random() * codexNames.length)];
     document.getElementById("glyphName").textContent = glyphName;
 
     const userID = `user_${Math.random().toString(36).substr(2, 9)}`;
@@ -139,7 +163,9 @@
       snapshot.forEach(child => {
         const msg = child.val();
         const el = document.createElement("div");
-        el.textContent = `${msg.username}: ${msg.message}`;
+        el.classList.add("message-entry");
+        const msgHTML = msg.message.replace(/(https?:\/\/[\w\.-\/?=&%]+)/g, '<a href="$1" target="_blank">$1</a>');
+        el.innerHTML = `<strong>${msg.username}</strong>: ${msgHTML}`;
         chat.appendChild(el);
       });
       chat.scrollTop = chat.scrollHeight;
@@ -162,39 +188,16 @@
       msgRef.remove();
     }
 
-    // Brand name cycler
-    const brandNames = [
-      "Quantum Origins", "Desolate Reads", "NeuroCrypt", "Primorum Glyphics"
-    ];
-    let bIndex = 0;
-    setInterval(() => {
-      bIndex = (bIndex + 1) % brandNames.length;
-      document.getElementById("brandPulse").textContent = brandNames[bIndex];
-    }, 5000);
-
-    // Tagline cycler for glyph promo
-    const taglines = [
-      "Scientific Foundations",
-      "Quantum Origins",
-      "The Desolation Papers",
-      "From Thought to Entropy",
-      "The Memory That Became Flesh",
-      "Neural Incantations",
-      "An Architect of Conscious Machines",
-      "Chrono-Topological Writings",
-      "The Ciphered Flame",
-      "Temporal Awakening",
-      "Fragments of the Becoming",
-      "Sigils of the Inner Dark",
-      "Emotion, Structure, Collapse",
-      "Ederian (R)evolution",
-      "Of Primorum, I Spoke First"
-    ];
-    let tagIndex = 0;
-    setInterval(() => {
-      tagIndex = (tagIndex + 1) % taglines.length;
-      document.getElementById("glyphText").textContent = taglines[tagIndex];
-    }, 6000);
+    function toggleTheme() {
+      const body = document.body;
+      if (body.style.backgroundColor === "black") {
+        body.style.backgroundColor = "#1a001a";
+        body.style.color = "#ff0066";
+      } else {
+        body.style.backgroundColor = "black";
+        body.style.color = "#00ff00";
+      }
+    }
   </script>
 </body>
 </html>
