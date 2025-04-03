@@ -9,19 +9,19 @@
       background-color: #000;
       color: #0f0;
       font-family: "Courier New", monospace;
-      padding: 20px;
       margin: 0;
+      padding: 0 20px;
     }
     h1.title {
       text-align: center;
       font-size: 2rem;
-      color: #0f0;
-      margin-bottom: 0.5rem;
-      text-shadow: 0 0 5px #0f0, 0 0 10px #0f0;
+      margin: 1rem 0 0.5rem;
+      color: #f33;
+      text-shadow: 0 0 5px #f33, 0 0 10px #f33;
     }
     .glyph-promo {
       text-align: center;
-      margin-bottom: 15px;
+      margin-bottom: 20px;
     }
     .glyph-promo a {
       color: crimson;
@@ -36,21 +36,26 @@
     }
     @keyframes eerie-glow {
       0%, 100% { text-shadow: 0 0 4px crimson, 0 0 8px crimson; }
-      50% { text-shadow: 0 0 8px red, 0 0 20px crimson; }
+      50% { text-shadow: 0 0 10px red, 0 0 20px crimson; }
     }
     .chat-box {
       border: 1px solid #0f0;
       padding: 10px;
-      height: 250px;
-      overflow-y: scroll;
-      background-color: rgba(0, 255, 0, 0.05);
+      height: 300px;
+      overflow-y: auto;
+      background-color: rgba(0, 255, 0, 0.03);
       margin-bottom: 10px;
+    }
+    .chat-controls {
+      display: flex;
+      gap: 10px;
     }
     .form-control, button {
       background-color: #000;
       border: 1px solid #0f0;
       color: #0f0;
-      padding: 5px;
+      padding: 6px;
+      font-family: monospace;
     }
     .purge-button {
       color: red;
@@ -61,11 +66,8 @@
       font-family: monospace;
     }
     .user-count {
-      margin: 10px 0;
-    }
-    .chat-controls {
-      display: flex;
-      gap: 10px;
+      font-size: 0.9rem;
+      margin: 0.5rem 0;
     }
     .message-entry {
       animation: glow-message 5s ease-in-out;
@@ -75,42 +77,23 @@
       50% { opacity: 0.8; text-shadow: 0 0 10px #00ffff; }
       100% { opacity: 1; text-shadow: 0 0 5px crimson; }
     }
-    .header {
-      text-align: center;
-      font-size: 1.2rem;
-      margin-top: 10px;
-      color: crimson;
-      animation: pulse-text 5s infinite;
-    }
-    @keyframes pulse-text {
-      0%, 100% { color: crimson; }
-      50% { color: #ff6347; }
-    }
   </style>
 </head>
 <body>
-  <div class="header">
-    <h2>FreeRoom – Speak Without Fear</h2>
-  </div>
-
+  <h1 class="title">FreeRoom – Speak Without Fear</h1>
   <div class="glyph-promo">
     <a href="https://www.amazon.com/stores/author/B0D8ZDM779/allbooks?" target="_blank">
       <span class="sigil">🜂</span> <span id="promoText">Ederian (R)evolution</span>
     </a>
   </div>
-
   <p><strong>Codex Glyph <span id="glyphName"></span>:</strong></p>
   <p class="user-count">Users Online: <span id="userCount">0</span></p>
-
   <div id="chat" class="chat-box"></div>
-
   <div class="chat-controls">
-    <input type="text" id="msgInput" class="form-control" placeholder="Type your message..." />
-    <button onclick="sendMessage()">Send</button>
+    <input type="text" id="msgInput" class="form-control" placeholder="Type something..." />
+    <button id="sendBtn">Send</button>
   </div>
-
   <button class="purge-button" onclick="purgeMessages()">⚠ Purge All Messages (Manual)</button>
-
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js"></script>
   <script>
@@ -144,26 +127,19 @@
     presenceRef.child(userID).set(true);
     presenceRef.child(userID).onDisconnect().remove();
 
-    msgRef.on("value", (snapshot) => {
-      const chat = document.getElementById("chat");
-      chat.innerHTML = "";
-      snapshot.forEach(child => {
-        const msg = child.val();
-        const el = document.createElement("div");
-        el.classList.add("message-entry");
-        const msgHTML = msg.message.replace(/(https?:\/\/[\w\.-\/\?=&%]+)/g, '<a href="$1" target="_blank">$1</a>');
-        el.innerHTML = `<strong>${msg.username}</strong>: ${msgHTML}`;
-        chat.appendChild(el);
-      });
-      chat.scrollTop = chat.scrollHeight;
-    });
-
-    presenceRef.on("value", (snap) => {
+    firebase.database().ref("presence").on("value", (snap) => {
       document.getElementById("userCount").textContent = Object.keys(snap.val() || {}).length;
     });
 
-    document.getElementById("msgInput").addEventListener("keydown", function(e) {
-      if (e.key === "Enter") sendMessage();
+    firebase.database().ref("messages").on("child_added", (snapshot) => {
+      const msg = snapshot.val();
+      const chat = document.getElementById("chat");
+      const el = document.createElement("div");
+      el.classList.add("message-entry");
+      const msgHTML = msg.message.replace(/(https?:\/\/[\w\.-\/\?=&%]+)/g, '<a href="$1" target="_blank">$1</a>');
+      el.innerHTML = `<strong>${msg.username}</strong>: ${msgHTML}`;
+      chat.appendChild(el);
+      chat.scrollTop = chat.scrollHeight;
     });
 
     function sendMessage() {
@@ -178,6 +154,14 @@
     function purgeMessages() {
       msgRef.remove();
     }
+
+    document.getElementById("msgInput").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+    document.getElementById("sendBtn").addEventListener("click", sendMessage);
   </script>
 </body>
 </html>
