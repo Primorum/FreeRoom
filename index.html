@@ -28,7 +28,7 @@
       text-decoration: none;
       font-weight: bold;
       font-size: 1.1rem;
-      animation: eerie-glow 3s infinite, green-glow 5s infinite;
+      animation: eerie-glow 3s infinite, green-pulse 2.5s infinite;
     }
     .sigil {
       font-size: 1.5rem;
@@ -38,9 +38,9 @@
       0%, 100% { text-shadow: 0 0 4px crimson, 0 0 8px crimson; }
       50% { text-shadow: 0 0 10px red, 0 0 20px crimson; }
     }
-    @keyframes green-glow {
-      0%, 100% { text-shadow: 0 0 4px #0f0; }
-      50% { text-shadow: 0 0 12px #0f0; }
+    @keyframes green-pulse {
+      0%, 100% { text-shadow: 0 0 6px #0f0, 0 0 12px #0f0; }
+      50% { text-shadow: 0 0 18px #0f0, 0 0 36px #0f0; }
     }
     .chat-box {
       border: 1px solid #0f0;
