@@ -12,14 +12,22 @@
       padding: 20px;
       margin: 0;
     }
+    h1.title {
+      text-align: center;
+      font-size: 2rem;
+      color: #0f0;
+      margin-bottom: 0.5rem;
+      text-shadow: 0 0 5px #0f0, 0 0 10px #0f0;
+    }
     .glyph-promo {
       text-align: center;
-      margin-bottom: 5px;
+      margin-bottom: 15px;
     }
     .glyph-promo a {
       color: crimson;
       text-decoration: none;
       font-weight: bold;
+      font-size: 1.1rem;
       animation: eerie-glow 3s infinite;
     }
     .sigil {
@@ -29,10 +37,6 @@
     @keyframes eerie-glow {
       0%, 100% { text-shadow: 0 0 4px crimson, 0 0 8px crimson; }
       50% { text-shadow: 0 0 8px red, 0 0 20px crimson; }
-    }
-    h1 {
-      text-align: center;
-      margin: 5px 0 15px;
     }
     .chat-box {
       border: 1px solid #0f0;
@@ -74,11 +78,11 @@
   </style>
 </head>
 <body>
-  <h1>FreeRoom [Δ]</h1>
+  <h1 class="title">FreeRoom [Δ]</h1>
 
   <div class="glyph-promo">
-    <a href="https://www.amazon.com/stores/author/B0D8ZDM779/allbooks?" target="_blank" id="glyphLink">
-      <span class="sigil">🜂</span> <span id="glyphText">Ederian (R)evolution</span>
+    <a href="https://www.amazon.com/stores/author/B0D8ZDM779/allbooks?" target="_blank">
+      <span class="sigil">🜂</span> <span>Ederian (R)evolution</span>
     </a>
   </div>
 
@@ -114,10 +118,10 @@
     const presenceRef = db.ref("presence");
 
     const codexNames = [
-      "QuantumSeer", "EntropyMonk", "DreamArchivist", "ChronoWeaver", "Συνείδησις", "Σκέψις", "Νόησις", "CipheredOne",
-      "SpectralThinker", "PrimordialMind", "AnimaEgo", "Theophoric", "Ψυχή", "Δαίμων", "Pathfinder", "DriftBearer",
-      "Στιγμή", "GlitchNode", "The Witness", "VoidMason", "CosmicScribe", "Φωνή", "AstralShaper", "Emanant", "Δέκτης",
-      "PulseScript", "CausalEcho", "MythosCode", "CovenFlare", "SignalThorn", "Νόμος", "NeuralPath", "ThreadKeeper"
+      "QuantumSeer", "EntropyMonk", "DreamArchivist", "ChronoWeaver", "Suneidesis", "Skepsis", "Noesis", "CipheredOne",
+      "SpectralThinker", "PrimordialMind", "AnimaEgo", "Theophoric", "Psyche", "Daimon", "Pathfinder", "DriftBearer",
+      "Stigme", "GlitchNode", "TheWitness", "VoidMason", "CosmicScribe", "Phone", "AstralShaper", "Emanant", "Dektis",
+      "PulseScript", "CausalEcho", "MythosCode", "CovenFlare", "SignalThorn", "Nomos", "NeuralPath", "ThreadKeeper"
     ];
 
     const glyphName = codexNames[Math.floor(Math.random() * codexNames.length)];
