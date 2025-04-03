@@ -1,193 +1,154 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>FreeRoom</title>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js">
-    function manualPurge() {
-      if (confirm("Are you sure you want to purge all messages? This cannot be undone.")) {
-        db.ref("messages").remove().then(() => {
-          terminal.innerHTML = "";
-          alert("Messages purged.");
-        });
-      }
-    }
-</script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js">
-    function manualPurge() {
-      if (confirm("Are you sure you want to purge all messages? This cannot be undone.")) {
-        db.ref("messages").remove().then(() => {
-          terminal.innerHTML = "";
-          alert("Messages purged.");
-        });
-      }
-    }
-</script>
+  <title>FreeRoom: Terminal Chat</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2285%22 fill=%22green%22>FR</text></svg>">
   <style>
     body {
       background-color: black;
-      color: #00FF00;
+      color: #00FF90;
       font-family: monospace;
+      padding: 1rem;
       margin: 0;
-      padding: 0;
     }
-    #header {
-      padding: 1rem;
-      text-align: center;
-    }
-    #glyph-log, #user-count {
-      text-align: center;
-      font-size: 1rem;
-      color: #0f0;
-      margin-top: 0.5rem;
-    }
-    #terminal {
-      height: 50vh;
+    #chat {
+      max-height: 70vh;
       overflow-y: auto;
-      padding: 1rem;
-      border-top: 1px solid red;
-      border-bottom: 1px solid red;
+      white-space: pre-wrap;
+      padding-bottom: 1rem;
     }
-    #chat-input {
-      width: 100%;
-      padding: 1rem;
-      border: none;
-      font-size: 1.2rem;
-      background-color: black;
-      color: #00FF00;
+    input, button {
+      background-color: #111;
+      border: 1px solid #00FF90;
+      color: #00FF90;
+      padding: 0.5rem;
+      font-family: monospace;
     }
-    .message {
-      margin: 0.2rem 0;
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
     }
-    .glow-link {
-      display: block;
-      text-align: center;
-      margin: 1rem 0;
-    }
-    .glow-link a {
-      color: #0f0;
-      font-size: 1.1rem;
+    .amazon-link {
       text-decoration: none;
-      padding: 0.3rem 0.8rem;
-      border: 1px solid #0f0;
-      border-radius: 6px;
-      box-shadow: 0 0 8px #0f0;
+      color: #00FF90;
       animation: pulse 2s infinite;
     }
     @keyframes pulse {
-      0%, 100% { box-shadow: 0 0 8px #0f0; }
-      50% { box-shadow: 0 0 16px #0f0; }
+      0% {opacity: 0.6;}
+      50% {opacity: 1;}
+      100% {opacity: 0.6;}
+    }
+    #userCount {
+      margin-top: 1rem;
+      font-style: italic;
+    }
+    #purgeButton {
+      margin-top: 2rem;
+      display: block;
+      width: 100%;
+      text-align: center;
+      border-color: red;
+      color: red;
     }
   </style>
 </head>
 <body>
-  <div class="glow-link">
-    <a href="https://www.amazon.com/stores/author/B0D8ZDM779/allbooks?" target="_blank">
-      🜂 View Jacob A. Eder’s Scientific Works
+  <div class="header">
+    <h2>FreeRoom [🜂]</h2>
+    <a class="amazon-link" href="https://www.amazon.com/stores/author/B0D8ZDM779/allbooks?" target="_blank">
+      📚 Scientific Works (Primorum)
     </a>
   </div>
 
-  <div id="header">
-    <div id="glyph-log">Glyph Log: loading...</div>
-    <div id="user-count">Users online: 1</div>
-  </div>
+  <div id="chat"></div>
 
-  <div id="terminal">
-  <div style="text-align:center; margin-top:1rem;">
-    <button onclick="manualPurge()" style="background:black; color:red; border:1px solid red; padding:6px 12px; font-size:1rem; cursor:pointer;">
-      Force Purge (Delete All Messages)
-    </button>
-  </div>
-</div>
-  <input type="text" id="chat-input" placeholder="Type your message and hit Enter..."/>
+  <form id="msgForm">
+    <input type="text" id="msgInput" placeholder="Type your message..." autocomplete="off" required />
+    <button type="submit">Send</button>
+  </form>
 
-  <script>
+  <div id="userCount">Users Online: ...</div>
+
+  <button id="purgeButton">⚠️ Purge All Messages (Manual)</button>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getDatabase, ref, onChildAdded, push, serverTimestamp, set, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
     const firebaseConfig = {
-      apiKey: "AIzaSyAfepI6o8LUUkj5LKU9iXjZ9RQ274l",
+      apiKey: "AIzaSyAfDBiEQiOUbUxLkLS5UXjbXs-YRZ9QPZ4",
       authDomain: "freeroom-397b7.firebaseapp.com",
       databaseURL: "https://freeroom-397b7-default-rtdb.firebaseio.com",
       projectId: "freeroom-397b7",
       storageBucket: "freeroom-397b7.appspot.com",
-      messagingSenderId: "311136074671",
-      appId: "1:311136074671:web:2ad59f5091692c73f08e8",
-      measurementId: "G-J6K58KM0CE"
+      messagingSenderId: "31113064761",
+      appId: "1:31113064761:web:aef2da5956019962c738e8",
+      measurementId: "G-JKB5GKFCDB"
     };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
 
-    const terminal = document.getElementById("terminal");
-    const input = document.getElementById("chat-input");
-    const glyphLog = document.getElementById("glyph-log");
-    const userCount = document.getElementById("user-count");
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-    const glyphs = [
-      { icon: "☥", name: "Ashur" }, { icon: "☀", name: "Solareth" },
-      { icon: "⚡", name: "Vireon" }, { icon: "🌙", name: "Nytheron" },
-      { icon: "✦", name: "Tharion" }, { icon: "✪", name: "Velthryn" },
-      { icon: "✷", name: "Kaon" }, { icon: "☬", name: "Zenthros" },
-      { icon: "☼", name: "Luminar" }, { icon: "❇", name: "Vaelix" }
-    ];
-    const glyph = glyphs[Math.floor(Math.random() * glyphs.length)];
-    const username = `${glyph.icon} ${glyph.name}`;
-    const presenceRef = db.ref("presence/" + username.replace(/[^a-zA-Z0-9]/g, ''));
+    const msgForm = document.getElementById("msgForm");
+    const msgInput = document.getElementById("msgInput");
+    const chat = document.getElementById("chat");
+    const userCount = document.getElementById("userCount");
+    const purgeButton = document.getElementById("purgeButton");
 
-    // Track online presence
-    presenceRef.set(true);
-    presenceRef.onDisconnect().remove();
+    const glyphs = ["⚝", "☥", "✶", "卐", "⌬", "⚚", "⟁", "🜁", "🜂", "🜃", "🜄", "🜍", "🜔", "🝓", "♒", "⚛"];
+    const glyphName = "User " + glyphs[Math.floor(Math.random() * glyphs.length)];
 
-    // Track presence
-    db.ref("presence").on("value", snapshot => {
-      const onlineUsers = snapshot.val() || {};
-      const userList = Object.keys(onlineUsers);
-      glyphLog.textContent = "Glyph Log: " + userList.map(name => name).join(", ");
-      userCount.textContent = "Users online: " + userList.length;
+    const messagesRef = ref(db, "messages");
+    const presenceRef = ref(db, "presence/" + Math.random().toString(36).substr(2, 8));
+    set(presenceRef, true);
+
+    window.addEventListener("beforeunload", () => {
+      remove(presenceRef);
     });
 
-    function writeMessage(msg) {
-      const now = Date.now();
-      db.ref("messages").push({
-        username,
-        message: msg,
-        timestamp: now
-      });
-    }
-
-    function renderMessage(data) {
-      const div = document.createElement("div");
-      div.className = "message";
-      const time = new Date(data.timestamp).toLocaleTimeString();
-      div.innerHTML = `<span style='color:red;'>${data.username}</span> <span style='color:grey;'>[${time}]</span>: ${data.message}`;
-      terminal.appendChild(div);
-      terminal.scrollTop = terminal.scrollHeight;
-    }
-
-    input.addEventListener("keydown", e => {
-      if (e.key === "Enter") {
-        const val = input.value.trim();
-        if (val) {
-          writeMessage(val);
-          input.value = "";
-        }
+    msgForm.addEventListener("submit", e => {
+      e.preventDefault();
+      const msg = msgInput.value.trim();
+      if (msg !== "") {
+        const newMsg = push(messagesRef);
+        set(newMsg, {
+          username: glyphName,
+          message: msg,
+          timestamp: Date.now()
+        });
+        msgInput.value = "";
       }
     });
 
-    db.ref("messages").on("child_added", snapshot => {
-      const msg = snapshot.val();
-      if (msg && msg.timestamp > Date.now() - 7 * 24 * 60 * 60 * 1000) {
-        renderMessage(msg);
-      }
+    onChildAdded(messagesRef, snapshot => {
+      const { username, message } = snapshot.val();
+      const entry = document.createElement("div");
+      entry.textContent = `${username}: ${message}`;
+      chat.appendChild(entry);
+      chat.scrollTop = chat.scrollHeight;
     });
-  
-    function manualPurge() {
-      if (confirm("Are you sure you want to purge all messages? This cannot be undone.")) {
-        db.ref("messages").remove().then(() => {
-          terminal.innerHTML = "";
-          alert("Messages purged.");
+
+    // Count users online
+    setInterval(async () => {
+      const snap = await fetch(`${firebaseConfig.databaseURL}/presence.json`).then(res => res.json());
+      const count = snap ? Object.keys(snap).length : 0;
+      userCount.textContent = `Users Online: ${count}`;
+    }, 3000);
+
+    // Manual purge
+    purgeButton.addEventListener("click", () => {
+      if (confirm("This will permanently delete all messages. Proceed?")) {
+        fetch(`${firebaseConfig.databaseURL}/messages.json`, {
+          method: "DELETE"
+        }).then(() => {
+          chat.innerHTML = "";
         });
       }
-    }
-</script>
+    });
+  </script>
 </body>
 </html>
