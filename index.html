@@ -92,37 +92,70 @@
   <div id="stealth-toggle" onclick="toggleStealth()">Toggle Stealth Mode</div>
 
   <script>
+    // Primorum Glyphs: a list of names with corresponding symbolic icons.
+    const glyphs = [
+      { name: "Ashur", icon: "☥" },
+      { name: "Solareth", icon: "☀" },
+      { name: "Vireon", icon: "⚡" },
+      { name: "Nytheron", icon: "🌙" },
+      { name: "Ecliptris", icon: "☾" },
+      { name: "Tharion", icon: "✦" },
+      { name: "Zeyra", icon: "★" },
+      { name: "Velthryn", icon: "✪" },
+      { name: "Kaon", icon: "✷" },
+      { name: "Orunex", icon: "✧" },
+      { name: "Myrrak", icon: "✵" },
+      { name: "Cytherin", icon: "❂" },
+      { name: "Othrael", icon: "❁" },
+      { name: "Drexon", icon: "✩" },
+      { name: "Yllareth", icon: "✮" },
+      { name: "Zenthros", icon: "☬" },
+      { name: "Kairon", icon: "✺" },
+      { name: "Luminar", icon: "☼" },
+      { name: "Vaelix", icon: "❇" },
+      { name: "Xharon", icon: "⚜" }
+    ];
+    
+    // Randomly assign a glyph to this visitor.
+    const randomGlyph = glyphs[Math.floor(Math.random() * glyphs.length)];
+    const userId = randomGlyph.icon + " " + randomGlyph.name;
+    
+    // Terminal elements
     const terminal = document.getElementById('terminal');
     const input = document.getElementById('chat-input');
-    const userId = 'anonymous' + Math.floor(Math.random() * 9999);
     const stealthToggle = document.getElementById('stealth-toggle');
 
+    // Get current time formatted as [M/D HH:MM]
     function getTime() {
       const now = new Date();
       return `[${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}]`;
     }
 
+    // Append a message to the terminal, with an optional "system" flag.
     function appendMessage(text, isSystem = false) {
       const div = document.createElement('div');
       div.classList.add('message');
 
-      const isRecent = !isSystem;
+      // Format the message: system messages use cyan color.
       div.innerHTML = isSystem
         ? `<span class="timestamp">${getTime()}</span> <span style="color:cyan;">[System]</span>: ${text}`
         : `<span class="timestamp">${getTime()}</span> <span class="username">${userId}</span>: ${text}`;
 
-      if (isRecent) {
+      // Apply a pulse effect for non-system (new) messages.
+      if (!isSystem) {
         div.classList.add('pulse');
       }
-
+      
       terminal.appendChild(div);
       terminal.scrollTop = terminal.scrollHeight;
     }
 
+    // Toggle "Stealth Mode" to darken the terminal background.
     function toggleStealth() {
       document.body.classList.toggle('stealth');
     }
 
+    // Handle special commands entered by the user.
     function handleCommand(cmd) {
       const lower = cmd.toLowerCase();
       if (lower === '/clear') {
@@ -140,6 +173,7 @@
       return false;
     }
 
+    // Submit the input text as a message.
     function submitInput() {
       const msg = input.value.trim();
       if (!msg) return;
@@ -147,10 +181,10 @@
       if (!handleCommand(msg)) {
         appendMessage(msg);
       }
-
       input.value = '';
     }
 
+    // Submit message on Enter key press.
     input.addEventListener('keydown', function (e) {
       if (e.key === 'Enter') {
         e.preventDefault();
@@ -158,8 +192,11 @@
       }
     });
 
+    // Welcome messages
     appendMessage("Welcome to FreeRoom. No logins, no tracking. You are free to speak.", true);
     appendMessage("Type /help for available commands.", true);
+    // Inform the visitor of their assigned glyph handle.
+    appendMessage("You are now known as: " + userId, true);
   </script>
 </body>
 </html>
