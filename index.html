@@ -4,77 +4,85 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FreeRoom [Δ]</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>Δ</text></svg>">
   <style>
     body {
-      background: black;
-      color: #00ff00;
-      font-family: 'Courier New', Courier, monospace;
+      background-color: #000;
+      color: #0f0;
+      font-family: "Courier New", monospace;
+      padding: 20px;
       margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
     }
     h1 {
-      margin: 1rem;
-    }
-    #chat {
-      flex: 1;
-      overflow-y: auto;
-      padding: 1rem;
-    }
-    #msgform {
-      display: flex;
-      padding: 1rem;
-      background: black;
-      border-top: 1px solid #00ff00;
-    }
-    #msginput {
-      flex: 1;
-      padding: 0.5rem;
-      background: black;
-      border: 1px solid #00ff00;
-      color: #00ff00;
-    }
-    #msgform button {
-      margin-left: 0.5rem;
-      background: black;
-      color: #00ff00;
-      border: 1px solid #00ff00;
-      padding: 0.5rem;
-      cursor: pointer;
-    }
-    #userCount {
-      padding-left: 1rem;
-    }
-    #purgeButton {
-      width: 100%;
       text-align: center;
-      padding: 1rem;
+      animation: glow 2s ease-in-out infinite alternate;
+    }
+    @keyframes glow {
+      from {
+        text-shadow: 0 0 5px #0f0, 0 0 10px #0f0;
+      }
+      to {
+        text-shadow: 0 0 20px #0f0, 0 0 40px #0f0;
+      }
+    }
+    .top-brand {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 1.3rem;
+    }
+    .brand-link {
+      color: #0f0;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .chat-box {
+      border: 1px solid #0f0;
+      padding: 10px;
+      height: 250px;
+      overflow-y: scroll;
+      background-color: rgba(0, 255, 0, 0.05);
+    }
+    .form-control, button {
+      background-color: #000;
+      border: 1px solid #0f0;
+      color: #0f0;
+      padding: 5px;
+    }
+    .purge-button {
       color: red;
-      cursor: pointer;
-      border-top: 1px solid red;
+      border: 1px solid red;
+      margin-top: 20px;
+      width: 100%;
+      background-color: transparent;
+      font-family: monospace;
+    }
+    .user-count {
+      margin: 10px 0;
     }
   </style>
 </head>
 <body>
+  <div class="top-brand">
+    <a class="brand-link" href="https://www.amazon.com/stores/Primorum" target="_blank">
+      <span id="brandPulse">Quantum Origins</span>
+    </a>
+  </div>
+
   <h1>FreeRoom [Δ]</h1>
-  <div style="padding-left: 1rem;">User 🧿: <span id="glyph"></span></div>
-  <div id="userCount">Users Online: 0</div>
-  <div id="chat"></div>
 
-  <form id="msgform">
-    <input id="msginput" autocomplete="off" placeholder="Type your message..." />
-    <button type="submit">Send</button>
-  </form>
+  <p><strong>User 🟪:</strong> <span id="glyphName"></span></p>
+  <input type="text" id="msgInput" class="form-control" placeholder="Type your message..." />
+  <button onclick="sendMessage()">Send</button>
+  <p class="user-count">Users Online: <span id="userCount">0</span></p>
 
-  <div id="purgeButton">⚠️ Purge All Messages (Manual)</div>
+  <div id="chat" class="chat-box"></div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getDatabase, ref, onChildAdded, push, set, remove, onDisconnect, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+  <button class="purge-button" onclick="purgeMessages()">
+    ⚠ Purge All Messages (Manual)
+  </button>
 
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js"></script>
+  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAfDBiEQiOUbUxLkLS5UXjbXs-YRZ9QPZ4",
       authDomain: "freeroom-397b7.firebaseapp.com",
@@ -86,62 +94,55 @@
       measurementId: "G-JKB5GKFCDB"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const msgRef = db.ref("messages");
+    const presenceRef = db.ref("presence");
 
-    const chat = document.getElementById("chat");
-    const form = document.getElementById("msgform");
-    const input = document.getElementById("msginput");
-    const glyphDisplay = document.getElementById("glyph");
-    const userCountDisplay = document.getElementById("userCount");
-    const purgeButton = document.getElementById("purgeButton");
+    const glyphs = ["⟐", "◬", "𐌎", "𐊗", "§", "⚶", "⇅", "∆", "☌", "🜁", "❖", "☍"];
+    const glyphName = glyphs[Math.floor(Math.random() * glyphs.length)];
+    document.getElementById("glyphName").textContent = glyphName;
 
-    const glyphs = ["⟁", "𓂀", "𐂂", "Δ", "§", "↯", "𖤐", "Ψ", "λ", "♁", "⚛", "⊗", "🜁", "⛧"];
-    let glyphName = sessionStorage.getItem("glyphName");
-    if (!glyphName) {
-      glyphName = glyphs[Math.floor(Math.random() * glyphs.length)];
-      sessionStorage.setItem("glyphName", glyphName);
-    }
-    glyphDisplay.textContent = glyphName;
+    const userID = `user_${Math.random().toString(36).substr(2, 9)}`;
+    presenceRef.child(userID).set(true);
+    presenceRef.child(userID).onDisconnect().remove();
 
-    const messagesRef = ref(db, "messages");
-    const presenceRef = ref(db, "presence/" + Math.random().toString(36).substring(2, 8));
-
-    set(presenceRef, true);
-    onDisconnect(presenceRef).remove();
-
-    onValue(ref(db, "presence"), (snapshot) => {
-      const count = snapshot.exists() ? Object.keys(snapshot.val()).length : 0;
-      userCountDisplay.textContent = `Users Online: ${count}`;
-    });
-
-    onChildAdded(messagesRef, (data) => {
-      const msg = data.val();
-      const div = document.createElement("div");
-      div.textContent = `${msg.username}: ${msg.message}`;
-      chat.appendChild(div);
+    msgRef.on("value", (snapshot) => {
+      const chat = document.getElementById("chat");
+      chat.innerHTML = "";
+      snapshot.forEach(child => {
+        const msg = child.val();
+        const el = document.createElement("div");
+        el.textContent = `${msg.username}: ${msg.message}`;
+        chat.appendChild(el);
+      });
       chat.scrollTop = chat.scrollHeight;
     });
 
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const text = input.value.trim();
-      if (text !== "") {
-        const msg = {
-          username: glyphName,
-          message: text,
-          timestamp: Date.now()
-        };
-        push(messagesRef, msg);
-        input.value = "";
-      }
+    presenceRef.on("value", (snap) => {
+      document.getElementById("userCount").textContent = Object.keys(snap.val() || {}).length;
     });
 
-    purgeButton.addEventListener("click", () => {
-      if (confirm("Are you sure you want to delete all messages?")) {
-        remove(messagesRef);
+    function sendMessage() {
+      const input = document.getElementById("msgInput");
+      const msg = input.value.trim();
+      if (msg) {
+        msgRef.push({ username: glyphName, message: msg, timestamp: Date.now() });
+        input.value = "";
       }
-    });
+    }
+
+    function purgeMessages() {
+      msgRef.remove();
+    }
+
+    // Brand cycler
+    const brandNames = ["Quantum Origins", "Desolate Reads", "NeuroCrypt", "Primorum Glyphics"];
+    let bIndex = 0;
+    setInterval(() => {
+      bIndex = (bIndex + 1) % brandNames.length;
+      document.getElementById("brandPulse").textContent = brandNames[bIndex];
+    }, 5000);
   </script>
 </body>
 </html>
