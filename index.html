@@ -17,22 +17,37 @@
       animation: glow 2s ease-in-out infinite alternate;
     }
     @keyframes glow {
-      from {
-        text-shadow: 0 0 5px #0f0, 0 0 10px #0f0;
-      }
-      to {
-        text-shadow: 0 0 20px #0f0, 0 0 40px #0f0;
-      }
+      from { text-shadow: 0 0 5px #0f0, 0 0 10px #0f0; }
+      to { text-shadow: 0 0 20px #0f0, 0 0 40px #0f0; }
     }
     .top-brand {
       text-align: center;
-      margin-bottom: 20px;
-      font-size: 1.3rem;
+      margin-bottom: 10px;
+      font-size: 1.2rem;
     }
     .brand-link {
       color: #0f0;
       text-decoration: none;
       font-weight: bold;
+    }
+    .glyph-promo {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .glyph-promo a {
+      color: #0f0;
+      text-decoration: none;
+      font-weight: bold;
+      animation: pulse 2.5s infinite;
+    }
+    .sigil {
+      font-size: 1.5rem;
+      margin-right: 0.5rem;
+    }
+    @keyframes pulse {
+      0% { opacity: 1; text-shadow: 0 0 5px #0f0; }
+      50% { opacity: 0.7; text-shadow: 0 0 20px #0f0; }
+      100% { opacity: 1; text-shadow: 0 0 5px #0f0; }
     }
     .chat-box {
       border: 1px solid #0f0;
@@ -62,8 +77,14 @@
 </head>
 <body>
   <div class="top-brand">
-    <a class="brand-link" href="https://www.amazon.com/stores/Primorum" target="_blank">
+    <a class="brand-link" href="https://primorum.github.io/" target="_blank">
       <span id="brandPulse">Quantum Origins</span>
+    </a>
+  </div>
+
+  <div class="glyph-promo">
+    <a href="https://www.amazon.com/stores/author/B0D8ZDM779/allbooks?" target="_blank" id="glyphLink">
+      <span class="sigil">🜂</span> <span id="glyphText">Ederian (R)evolution</span>
     </a>
   </div>
 
@@ -76,9 +97,7 @@
 
   <div id="chat" class="chat-box"></div>
 
-  <button class="purge-button" onclick="purgeMessages()">
-    ⚠ Purge All Messages (Manual)
-  </button>
+  <button class="purge-button" onclick="purgeMessages()">⚠ Purge All Messages (Manual)</button>
 
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js"></script>
@@ -136,13 +155,39 @@
       msgRef.remove();
     }
 
-    // Brand cycler
-    const brandNames = ["Quantum Origins", "Desolate Reads", "NeuroCrypt", "Primorum Glyphics"];
+    // Brand name cycler
+    const brandNames = [
+      "Quantum Origins", "Desolate Reads", "NeuroCrypt", "Primorum Glyphics"
+    ];
     let bIndex = 0;
     setInterval(() => {
       bIndex = (bIndex + 1) % brandNames.length;
       document.getElementById("brandPulse").textContent = brandNames[bIndex];
     }, 5000);
+
+    // Tagline cycler for glyph promo
+    const taglines = [
+      "Scientific Foundations",
+      "Quantum Origins",
+      "The Desolation Papers",
+      "From Thought to Entropy",
+      "The Memory That Became Flesh",
+      "Neural Incantations",
+      "An Architect of Conscious Machines",
+      "Chrono-Topological Writings",
+      "The Ciphered Flame",
+      "Temporal Awakening",
+      "Fragments of the Becoming",
+      "Sigils of the Inner Dark",
+      "Emotion, Structure, Collapse",
+      "Ederian (R)evolution",
+      "Of Primorum, I Spoke First"
+    ];
+    let tagIndex = 0;
+    setInterval(() => {
+      tagIndex = (tagIndex + 1) % taglines.length;
+      document.getElementById("glyphText").textContent = taglines[tagIndex];
+    }, 6000);
   </script>
 </body>
 </html>
