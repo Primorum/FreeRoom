@@ -2,235 +2,200 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta charset="UTF-8">
-  <title>FreeRoom | T3TInnovations</title>
+  <title>FreeRoom | Global Glyph Chat</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
   <style>
     body {
-      margin: 0;
-      background-color: #000;
-      font-family: monospace;
+      background: #000;
       color: #00FF00;
+      font-family: monospace;
+      margin: 0;
     }
-
     .header {
       color: red;
       text-align: center;
       font-size: 2rem;
       padding: 1rem;
     }
-
     .glyph-promo {
       text-align: center;
       margin-top: -0.5rem;
       margin-bottom: 1rem;
     }
-
     .glyph-promo a {
-      font-family: monospace;
       color: #00ff88;
       text-decoration: none;
       font-size: 1rem;
       padding: 0.5rem 1rem;
-      display: inline-block;
       border: 1px solid #00ff88;
       border-radius: 8px;
       box-shadow: 0 0 8px #00ff88;
-      animation: glyphPulse 2s infinite ease-in-out;
-      transition: all 0.3s ease-in-out;
+      animation: glow 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 0.9; }
+      50% { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(1); opacity: 0.9; }
+    }
+    .pulse {
+      animation: pulse 0.8s ease-in-out;
     }
 
-    .glyph-promo a:hover {
-      background-color: #001100;
-      box-shadow: 0 0 16px #00ff88;
-      color: #ffffff;
-    }
+    @keyframes glow {
 
-    @keyframes glyphPulse {
       0%, 100% { box-shadow: 0 0 8px #00ff88; }
       50% { box-shadow: 0 0 16px #00ff88; }
     }
-
-    .sigil {
-      margin-right: 0.5rem;
-    }
-
     #terminal {
-      height: 75vh;
+      max-width: 100vw;
+      box-sizing: border-box;
+      height: 70vh;
       overflow-y: auto;
       padding: 1rem;
       border-top: 2px solid red;
       border-bottom: 2px solid red;
     }
-
-    #terminal .message {
-      opacity: 0;
-      animation: fadeIn 1s ease-in-out forwards;
+    .message {
       margin: 0.3rem 0;
-      transition: box-shadow 0.3s ease;
+      animation: fadeIn 0.5s ease-in;
     }
-
     @keyframes fadeIn {
+      from { opacity: 0; }
       to { opacity: 1; }
     }
-
-    .pulse {
-      animation: pulseGlow 1s ease-in-out 5;
-    }
-
-    @keyframes pulseGlow {
-      0%, 100% { box-shadow: 0 0 0px #00ff00; }
-      50%      { box-shadow: 0 0 10px 3px #00ff00; }
-    }
-
-    .username {
-      color: red;
-    }
-
-    .timestamp {
-      color: grey;
-      font-size: 0.9rem;
-    }
-
     #chat-input {
+      box-sizing: border-box;
+      max-width: 100vw;
       width: 100%;
       padding: 1rem;
       font-size: 1.1rem;
-      color: #00FF00;
       background: #000;
-      border: none;
-      outline: none;
-    }
-
-    #stealth-toggle {
-      position: fixed;
-      bottom: 10px;
-      right: 10px;
-      background: #222;
       color: #0f0;
-      padding: 0.5rem;
-      border: 1px solid #0f0;
-      cursor: pointer;
-      z-index: 1000;
-    }
-
-    .stealth #terminal {
-      background-color: #010101;
+      border: none;
     }
   </style>
 </head>
 <body>
-  <div class="header">FreeRoom – Speak Without Fear</div>
-
+  
+    <div class="header">
+      FreeRoom – Speak Without Fear<br>
+      <span style="font-size: 1rem; color: #0f0;">🧿 
+    <span id="userCount" class="pulse">0</span> glyphs online
+    </span>
+    
+    <div id="dashboardLog" style="text-align:center; margin-top:0.3rem; color:#aaa; font-size:0.8rem;">
+      🌒 FreeRoom metrics updating...
+    </div>
+    <div id="glyphLog"
+ style="text-align:center; margin-top:0.5rem; color:#0f0; font-size:0.9rem;"></div>
+    
+    </div>
+    
   <div class="glyph-promo">
-    <a href="https://www.amazon.com/stores/author/B0D8ZDM779/allbooks?" target="_blank" id="glyphLink">
-      <span class="sigil">🜂</span> <span id="glyphText">Ederian (R)evolution</span>
+    <a href="https://www.amazon.com/stores/author/B0D8ZDM779/allbooks?" target="_blank">
+      🜂 <span id="glyphText">Ederian (R)evolution</span>
     </a>
   </div>
-
   <div id="terminal"></div>
-
-  <input type="text" id="chat-input" placeholder="Type something..." autofocus>
-
-  <div id="stealth-toggle" onclick="toggleStealth()">Toggle Stealth Mode</div>
+  <input type="text" id="chat-input" placeholder="Type something...">
 
   <script>
-    const glyphs = [
-      { name: "Ashur", icon: "☥" },
-      { name: "Solareth", icon: "☀" },
-      { name: "Vireon", icon: "⚡" },
-      { name: "Nytheron", icon: "🌙" },
-      { name: "Ecliptris", icon: "☾" },
-      { name: "Tharion", icon: "✦" },
-      { name: "Zeyra", icon: "★" },
-      { name: "Velthryn", icon: "✪" },
-      { name: "Kaon", icon: "✷" },
-      { name: "Orunex", icon: "✧" },
-      { name: "Myrrak", icon: "✵" },
-      { name: "Cytherin", icon: "❂" },
-      { name: "Othrael", icon: "❁" },
-      { name: "Drexon", icon: "✩" },
-      { name: "Yllareth", icon: "✮" },
-      { name: "Zenthros", icon: "☬" },
-      { name: "Kairon", icon: "✺" },
-      { name: "Luminar", icon: "☼" },
-      { name: "Vaelix", icon: "❇" },
-      { name: "Xharon", icon: "⚜" }
-    ];
-    const randomGlyph = glyphs[Math.floor(Math.random() * glyphs.length)];
-    const userId = randomGlyph.icon + " " + randomGlyph.name;
+    const firebaseConfig = {"apiKey": "AIzaSyAfepI6o8LUUkj5LKU9iXjZ9RQ274l", "authDomain": "freeroom-397b7.firebaseapp.com", "databaseURL": "https://freeroom-397b7-default-rtdb.firebaseio.com", "projectId": "freeroom-397b7", "storageBucket": "freeroom-397b7.appspot.com", "messagingSenderId": "311136074671", "appId": "1:311136074671:web:2ad59f5091692c73f08e8", "measurementId": "G-J6K58KM0CE"};
+    
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const presenceRef = db.ref('presence');
+    const userId = username + '_' + Math.random().toString(36).substr(2, 5);
+    const userPresenceRef = presenceRef.child(userId);
+
+    // Set presence when connected
+    
+    firebase.database().ref('.info/connected').on('value', function(snapshot) {
+      const dashboardLog = document.getElementById('dashboardLog');
+      const now = new Date().toLocaleString();
+      dashboardLog.innerText = `🜂 Connected at ${now}.`;
+
+      if (snapshot.val()) {
+        userPresenceRef.set(true);
+        userPresenceRef.onDisconnect().remove();
+      }
+    });
+
+    // Display online user count
+    
+    presenceRef.on('value', snap => {
+      document.getElementById('userCount').classList.add('pulse');
+      setTimeout(() => {
+        document.getElementById('userCount').classList.remove('pulse');
+      }, 800);
+
+      const count = snap.numChildren();
+      document.getElementById('userCount').innerText = count;
+
+      let log = '';
+      snap.forEach(child => {
+        const glyphName = child.key.split('_')[0];
+        log += glyphName + ' ';
+      });
+      document.getElementById('glyphLog').innerText = log.trim();
+
+      const count = snap.numChildren();
+      document.getElementById('userCount').innerText = count;
+    });
+    
+    const db = firebase.database();
 
     const terminal = document.getElementById('terminal');
     const input = document.getElementById('chat-input');
-    const stealthToggle = document.getElementById('stealth-toggle');
 
-    function getTime() {
-      const now = new Date();
-      return `[${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}]`;
+    const glyphs = [
+      { name: "Ashur", icon: "☥" }, { name: "Solareth", icon: "☀" },
+      { name: "Vireon", icon: "⚡" }, { name: "Nytheron", icon: "🌙" },
+      { name: "Tharion", icon: "✦" }, { name: "Velthryn", icon: "✪" },
+      { name: "Kaon", icon: "✷" }, { name: "Zenthros", icon: "☬" },
+      { name: "Luminar", icon: "☼" }, { name: "Vaelix", icon: "❇" }
+    ];
+    const glyph = glyphs[Math.floor(Math.random() * glyphs.length)];
+    const username = `${glyph.icon} ${glyph.name}`;
+
+    function writeMessage(msg) {
+      const now = Date.now();
+      db.ref("messages").push({
+        username,
+        message: msg,
+        timestamp: now
+      });
     }
 
-    function appendMessage(text, isSystem = false) {
+    function renderMessage(data) {
       const div = document.createElement('div');
-      div.classList.add('message');
-      div.innerHTML = isSystem
-        ? `<span class="timestamp">${getTime()}</span> <span style="color:cyan;">[System]</span>: ${text}`
-        : `<span class="timestamp">${getTime()}</span> <span class="username">${userId}</span>: ${text}`;
-      if (!isSystem) div.classList.add('pulse');
+      div.className = 'message';
+      const time = new Date(data.timestamp).toLocaleTimeString();
+      div.innerHTML = `<span style='color:red;'>${data.username}</span> <span style='color:grey;'>[${time}]</span>: ${data.message}`;
       terminal.appendChild(div);
       terminal.scrollTop = terminal.scrollHeight;
     }
 
-    function toggleStealth() {
-      document.body.classList.toggle('stealth');
-    }
-
-    function handleCommand(cmd) {
-      const lower = cmd.toLowerCase();
-      if (lower === '/clear') {
-        terminal.innerHTML = '';
-        return true;
-      }
-      if (lower === '/help') {
-        appendMessage("Available commands: /clear, /help, /shout [text]", true);
-        return true;
-      }
-      if (lower.startsWith('/shout ')) {
-        appendMessage(`<strong style="color:red;">${cmd.substring(7).toUpperCase()}</strong>`);
-        return true;
-      }
-      return false;
-    }
-
-    function submitInput() {
-      const msg = input.value.trim();
-      if (!msg) return;
-      if (!handleCommand(msg)) appendMessage(msg);
-      input.value = '';
-    }
-
-    input.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        submitInput();
+    input.addEventListener("keydown", e => {
+      if (e.key === "Enter") {
+        const val = input.value.trim();
+        if (val) {
+          writeMessage(val);
+          input.value = "";
+        }
       }
     });
 
-    const taglines = [
-      "Scientific Foundations", "Quantum Origins", "The Desolation Papers",
-      "From Thought to Entropy", "The Memory That Became Flesh", "Neural Incantations",
-      "An Architect of Conscious Machines", "Chrono-Topological Writings", "The Ciphered Flame",
-      "Temporal Awakening", "Fragments of the Becoming", "Sigils of the Inner Dark",
-      "Emotion, Structure, Collapse", "Ederian (R)evolution", "Of Primorum, I Spoke First"
-    ];
-
-    function cycleTagline() {
-      const random = taglines[Math.floor(Math.random() * taglines.length)];
-      document.getElementById('glyphText').innerText = random;
-    }
-    setInterval(cycleTagline, 12000);
-
-    appendMessage("Welcome to FreeRoom. No logins, no tracking. You are free to speak.", true);
-    appendMessage("Type /help for available commands.", true);
-    appendMessage("You are now known as: " + userId, true);
+    db.ref("messages").on("child_added", snapshot => {
+      const msg = snapshot.val();
+      if (msg.timestamp > Date.now() - 7 * 24 * 60 * 60 * 1000) {
+        renderMessage(msg);
+      }
+    });
   </script>
 </body>
 </html>
