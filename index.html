@@ -128,6 +128,19 @@
     const glyphName = codexNames[Math.floor(Math.random() * codexNames.length)];
     document.getElementById("glyphName").textContent = glyphName;
 
+    const promoNames = [
+      "Ederian (R)evolution", "Quantum Origins", "The Desolation Papers", "Neural Incantations",
+      "Fragments of the Becoming", "Temporal Awakening", "Chrono-Topological Writings",
+      "Emotion, Structure, Collapse", "Sigils of the Inner Dark"
+    ];
+
+    let promoIndex = 0;
+    const promoText = document.getElementById("promoText");
+    setInterval(() => {
+      promoText.textContent = promoNames[promoIndex];
+      promoIndex = (promoIndex + 1) % promoNames.length;
+    }, 4000);
+
     const msgInput = document.getElementById("msgInput");
     const chatBox = document.getElementById("chat");
     const userCount = document.getElementById("userCount");
