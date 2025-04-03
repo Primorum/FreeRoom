@@ -93,7 +93,7 @@
     <input type="text" id="msgInput" class="form-control" placeholder="Type something..." />
     <button id="sendBtn">Send</button>
   </div>
-  <button class="purge-button" onclick="purgeMessages()">⚠ Purge All Messages (Manual)</button>
+  <button class="purge-button" id="purgeBtn">⚠ Purge All Messages (Manual)</button>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js"></script>
   <script>
@@ -152,7 +152,7 @@
     }
 
     function purgeMessages() {
-      msgRef.remove();
+      firebase.database().ref("messages").remove();
     }
 
     document.getElementById("msgInput").addEventListener("keydown", function(e) {
@@ -161,7 +161,9 @@
         sendMessage();
       }
     });
+
     document.getElementById("sendBtn").addEventListener("click", sendMessage);
+    document.getElementById("purgeBtn").addEventListener("click", purgeMessages);
   </script>
 </body>
 </html>
