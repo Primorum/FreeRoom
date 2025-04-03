@@ -147,6 +147,7 @@
 
     onChildAdded(messagesRef, (snapshot) => {
       const msg = snapshot.val();
+      if (!msg || !msg.username || !msg.message) return;
       const el = document.createElement("div");
       el.classList.add("message-entry");
       const time = new Date(msg.timestamp).toLocaleTimeString();
@@ -158,14 +159,13 @@
 
     function sendMessage() {
       const msg = msgInput.value.trim();
-      if (msg !== "") {
-        push(messagesRef, {
-          username: glyphName,
-          message: msg,
-          timestamp: Date.now()
-        });
-        msgInput.value = "";
-      }
+      if (msg.length === 0) return;
+      push(messagesRef, {
+        username: glyphName,
+        message: msg,
+        timestamp: Date.now()
+      });
+      msgInput.value = "";
     }
 
     sendBtn.addEventListener("click", sendMessage);
