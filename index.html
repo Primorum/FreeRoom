@@ -75,10 +75,28 @@
       50% { opacity: 0.8; text-shadow: 0 0 10px #00ffff; }
       100% { opacity: 1; text-shadow: 0 0 5px crimson; }
     }
+
+    /* New section for alternating pulsing Amazon link with glyph */
+    .header {
+      text-align: center;
+      font-size: 1.2rem;
+      margin-top: 10px;
+      color: crimson;
+      animation: pulse-text 5s infinite;
+    }
+    @keyframes pulse-text {
+      0%, 100% { color: crimson; }
+      50% { color: #ff6347; }
+    }
   </style>
 </head>
 <body>
-  <h1 class="title">FreeRoom [Δ]</h1>
+  <div class="header">
+    <h2>FreeRoom – Speak Without Fear</h2>
+    <a class="amazon-link" href="https://www.amazon.com/stores/author/B0D8ZDM779/allbooks?" target="_blank">
+      📚 Scientific Works (Primorum)
+    </a>
+  </div>
 
   <div class="glyph-promo">
     <a href="https://www.amazon.com/stores/author/B0D8ZDM779/allbooks?" target="_blank">
