@@ -91,12 +91,17 @@
   <div id="chat" class="chat-box"></div>
   <div class="chat-controls">
     <input type="text" id="msgInput" class="form-control" placeholder="Type something..." />
-    <button id="sendBtn">Send</button>
+    <button id="sendBtn" type="button">Send</button>
   </div>
   <button class="purge-button" id="purgeBtn">⚠ Purge All Messages (Manual)</button>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js"></script>
-  <script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import {
+      getDatabase, ref, set, push, remove, onChildAdded,
+      onValue, onDisconnect
+    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+
     const firebaseConfig = {
       apiKey: "AIzaSyAfDBiEQiOUbUxLkLS5UXjbXs-YRZ9QPZ4",
       authDomain: "freeroom-397b7.firebaseapp.com",
@@ -108,62 +113,74 @@
       measurementId: "G-JKB5GKFCDB"
     };
 
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const msgRef = db.ref("messages");
-    const presenceRef = db.ref("presence");
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
     const codexNames = [
-      "Vaelix", "Nytheron", "Solareth", "Dektis", "ChronoWeaver", "SpectralThinker", "CipheredOne", "DriftBearer",
-      "NeuralPath", "ThreadKeeper", "MythosCode", "EntropyMonk", "Suneidesis", "AnimaEgo", "Psyche", "AstralShaper",
-      "GlitchNode", "PrimordialMind", "Daimon", "VoidMason", "QuantumSeer", "CosmicScribe", "PulseScript", "CausalEcho",
-      "Nomos", "Emanant", "Pathfinder", "SignalThorn", "Stigme", "Noesis", "Skepsis", "Theophoric", "TheWitness", "CovenFlare"
+      "Vaelix", "Nytheron", "Solareth", "Dektis", "ChronoWeaver", "SpectralThinker",
+      "CipheredOne", "DriftBearer", "NeuralPath", "ThreadKeeper", "MythosCode",
+      "EntropyMonk", "Suneidesis", "AnimaEgo", "Psyche", "AstralShaper", "GlitchNode",
+      "PrimordialMind", "Daimon", "VoidMason", "QuantumSeer", "CosmicScribe", "PulseScript",
+      "CausalEcho", "Nomos", "Emanant", "Pathfinder", "SignalThorn", "Stigme", "Noesis",
+      "Skepsis", "Theophoric", "TheWitness", "CovenFlare"
     ];
 
     const glyphName = codexNames[Math.floor(Math.random() * codexNames.length)];
     document.getElementById("glyphName").textContent = glyphName;
 
-    const userID = `user_${Math.random().toString(36).substr(2, 9)}`;
-    presenceRef.child(userID).set(true);
-    presenceRef.child(userID).onDisconnect().remove();
+    const msgInput = document.getElementById("msgInput");
+    const chatBox = document.getElementById("chat");
+    const userCount = document.getElementById("userCount");
+    const sendBtn = document.getElementById("sendBtn");
+    const purgeBtn = document.getElementById("purgeBtn");
 
-    firebase.database().ref("presence").on("value", (snap) => {
-      document.getElementById("userCount").textContent = Object.keys(snap.val() || {}).length;
+    const messagesRef = ref(db, "messages");
+    const presenceRef = ref(db, "presence/" + Math.random().toString(36).substr(2, 8));
+
+    set(presenceRef, true);
+    onDisconnect(presenceRef).remove();
+
+    onValue(ref(db, "presence"), snap => {
+      const count = snap.exists() ? Object.keys(snap.val()).length : 0;
+      userCount.textContent = count;
     });
 
-    firebase.database().ref("messages").on("child_added", (snapshot) => {
+    onChildAdded(messagesRef, (snapshot) => {
       const msg = snapshot.val();
-      const chat = document.getElementById("chat");
       const el = document.createElement("div");
       el.classList.add("message-entry");
+      const time = new Date(msg.timestamp).toLocaleTimeString();
       const msgHTML = msg.message.replace(/(https?:\/\/[\w\.-\/\?=&%]+)/g, '<a href="$1" target="_blank">$1</a>');
-      el.innerHTML = `<strong>${msg.username}</strong>: ${msgHTML}`;
-      chat.appendChild(el);
-      chat.scrollTop = chat.scrollHeight;
+      el.innerHTML = `<strong>${msg.username}</strong> [${time}]: ${msgHTML}`;
+      chatBox.appendChild(el);
+      chatBox.scrollTop = chatBox.scrollHeight;
     });
 
     function sendMessage() {
-      const input = document.getElementById("msgInput");
-      const msg = input.value.trim();
-      if (msg) {
-        msgRef.push({ username: glyphName, message: msg, timestamp: Date.now() });
-        input.value = "";
+      const msg = msgInput.value.trim();
+      if (msg !== "") {
+        push(messagesRef, {
+          username: glyphName,
+          message: msg,
+          timestamp: Date.now()
+        });
+        msgInput.value = "";
       }
     }
 
-    function purgeMessages() {
-      firebase.database().ref("messages").remove();
-    }
-
-    document.getElementById("msgInput").addEventListener("keydown", function(e) {
+    sendBtn.addEventListener("click", sendMessage);
+    msgInput.addEventListener("keydown", function (e) {
       if (e.key === "Enter") {
         e.preventDefault();
         sendMessage();
       }
     });
 
-    document.getElementById("sendBtn").addEventListener("click", sendMessage);
-    document.getElementById("purgeBtn").addEventListener("click", purgeMessages);
+    purgeBtn.addEventListener("click", () => {
+      if (confirm("Are you sure you want to purge all messages?")) {
+        remove(messagesRef);
+      }
+    });
   </script>
 </body>
 </html>
