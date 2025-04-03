@@ -1,83 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>FreeRoom: Terminal Chat</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2285%22 fill=%22green%22>FR</text></svg>">
+  <meta charset="UTF-8">
+  <title>FreeRoom - Anonymous Chat</title>
   <style>
     body {
-      background-color: black;
-      color: #00FF90;
+      background-color: #000;
+      color: #0f0;
       font-family: monospace;
-      padding: 1rem;
       margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    header {
+      background: #111;
+      padding: 10px;
+      text-align: center;
+      font-weight: bold;
     }
     #chat {
-      max-height: 70vh;
-      overflow-y: auto;
-      white-space: pre-wrap;
-      padding-bottom: 1rem;
+      flex: 1;
+      overflow-y: scroll;
+      padding: 10px;
+      border-top: 1px solid #0f0;
+      border-bottom: 1px solid #0f0;
     }
-    input, button {
-      background-color: #111;
-      border: 1px solid #00FF90;
-      color: #00FF90;
-      padding: 0.5rem;
-      font-family: monospace;
-    }
-    .header {
+    #msgForm {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
+      padding: 10px;
+      background: #111;
     }
-    .amazon-link {
-      text-decoration: none;
-      color: #00FF90;
-      animation: pulse 2s infinite;
+    #msgInput {
+      flex: 1;
+      background: #000;
+      color: #0f0;
+      border: 1px solid #0f0;
+      padding: 5px;
     }
-    @keyframes pulse {
-      0% {opacity: 0.6;}
-      50% {opacity: 1;}
-      100% {opacity: 0.6;}
+    button {
+      background: #000;
+      color: #0f0;
+      border: 1px solid #0f0;
+      margin-left: 5px;
+      padding: 5px 10px;
     }
     #userCount {
-      margin-top: 1rem;
-      font-style: italic;
-    }
-    #purgeButton {
-      margin-top: 2rem;
-      display: block;
-      width: 100%;
+      font-size: 12px;
+      padding: 5px;
+      background: #111;
       text-align: center;
-      border-color: red;
-      color: red;
+      border-bottom: 1px solid #0f0;
+    }
+    #purgeSection {
+      text-align: center;
+      padding: 8px;
+      border-top: 1px solid #0f0;
+      background: #111;
     }
   </style>
-</head>
-<body>
-  <div class="header">
-    <h2>FreeRoom [🜂]</h2>
-    <a class="amazon-link" href="https://www.amazon.com/stores/author/B0D8ZDM779/allbooks?" target="_blank">
-      📚 Scientific Works (Primorum)
-    </a>
-  </div>
-
-  <div id="chat"></div>
-
-  <form id="msgForm">
-    <input type="text" id="msgInput" placeholder="Type your message..." autocomplete="off" required />
-    <button type="submit">Send</button>
-  </form>
-
-  <div id="userCount">Users Online: ...</div>
-
-  <button id="purgeButton">⚠️ Purge All Messages (Manual)</button>
-
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getDatabase, ref, onChildAdded, push, serverTimestamp, set, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+    import { getDatabase, ref, onChildAdded, push, set, serverTimestamp, onDisconnect, remove } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAfDBiEQiOUbUxLkLS5UXjbXs-YRZ9QPZ4",
@@ -92,30 +77,26 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-
+    const chatBox = document.getElementById("chat");
     const msgForm = document.getElementById("msgForm");
     const msgInput = document.getElementById("msgInput");
-    const chat = document.getElementById("chat");
     const userCount = document.getElementById("userCount");
     const purgeButton = document.getElementById("purgeButton");
 
-    const glyphs = ["⚝", "☥", "✶", "卐", "⌬", "⚚", "⟁", "🜁", "🜂", "🜃", "🜄", "🜍", "🜔", "🝓", "♒", "⚛"];
-    const glyphName = "User " + glyphs[Math.floor(Math.random() * glyphs.length)];
+    const glyphs = ["☼", "♁", "₪", "ʃ", "Φ", "π", "Ѧ", "λ", "χ", "ψ", "Ψ", "☯", "ᛉ", "⬢", "⚛"];
+    const glyphName = glyphs[Math.floor(Math.random() * glyphs.length)];
 
     const messagesRef = ref(db, "messages");
-    const presenceRef = ref(db, "presence/" + Math.random().toString(36).substr(2, 8));
+    const presenceRef = ref(db, "presence/" + Math.random().toString(36).substring(2, 8));
+
     set(presenceRef, true);
+    onDisconnect(presenceRef).remove();
 
-    window.addEventListener("beforeunload", () => {
-      remove(presenceRef);
-    });
-
-    msgForm.addEventListener("submit", e => {
+    msgForm.addEventListener("submit", (e) => {
       e.preventDefault();
       const msg = msgInput.value.trim();
       if (msg !== "") {
-        const newMsg = push(messagesRef);
-        set(newMsg, {
+        push(messagesRef, {
           username: glyphName,
           message: msg,
           timestamp: Date.now()
@@ -124,31 +105,47 @@
       }
     });
 
-    onChildAdded(messagesRef, snapshot => {
-      const { username, message } = snapshot.val();
-      const entry = document.createElement("div");
-      entry.textContent = `${username}: ${message}`;
-      chat.appendChild(entry);
-      chat.scrollTop = chat.scrollHeight;
+    onChildAdded(messagesRef, (snapshot) => {
+      const msg = snapshot.val();
+      appendMessage(msg.username, msg.message, msg.timestamp);
     });
 
-    // Count users online
-    setInterval(async () => {
-      const snap = await fetch(`${firebaseConfig.databaseURL}/presence.json`).then(res => res.json());
-      const count = snap ? Object.keys(snap).length : 0;
-      userCount.textContent = `Users Online: ${count}`;
-    }, 3000);
+    function appendMessage(username, message, timestamp) {
+      const msgElement = document.createElement("div");
+      const time = new Date(timestamp).toLocaleTimeString();
+      msgElement.innerHTML = `<strong>${username}</strong> [${time}]: ${message}`;
+      chatBox.appendChild(msgElement);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
 
-    // Manual purge
+    function updateUserCount(snapshot) {
+      const count = snapshot.size;
+      userCount.textContent = `${count} user(s) online`;
+    }
+
+    import { onValue } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+    import { get, remove as dbRemove } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+
+    onValue(ref(db, "presence"), updateUserCount);
+
     purgeButton.addEventListener("click", () => {
-      if (confirm("This will permanently delete all messages. Proceed?")) {
-        fetch(`${firebaseConfig.databaseURL}/messages.json`, {
-          method: "DELETE"
-        }).then(() => {
-          chat.innerHTML = "";
-        });
+      if (confirm("Are you sure you want to purge all messages?")) {
+        dbRemove(messagesRef);
       }
     });
   </script>
+</head>
+<body>
+  <header>🜂 FreeRoom – Anonymous Chat</header>
+  <div id="userCount">Loading user count...</div>
+  <div id="chat"></div>
+  <form id="msgForm">
+    <input id="msgInput" type="text" placeholder="Type your message..." autocomplete="off" />
+    <button type="submit">Send</button>
+  </form>
+  <div id="purgeSection">
+    <button id="purgeButton">Force Purge Messages</button>
+  </div>
 </body>
 </html>
+"""
